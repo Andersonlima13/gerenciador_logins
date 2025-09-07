@@ -7,10 +7,13 @@ const authenticateToken = require('../middlewares/authenticateToken');
 // ---- Alunos (Postgres) ----
 router.get('/alunos', authenticateToken, userController.getAllStudents);
 router.get('/alunos/:matricula', authenticateToken, userController.getStudentById);
+router.post('/alunos/card-pdf', authenticateToken, userController.generateStudentCardPDF);
 router.post('/alunos/create', userController.createStudent);
 router.put('/alunos/update/:id', authenticateToken, userController.updateStudentById);
 router.delete('/alunos/delete/:id', authenticateToken, userController.deleteStudentById);
 
+// eu preciso realmente espeficiar os ids aqui ? 
+router.post('/alunos/pdfs', authenticateToken, userController.generatePDFsForStudents);
 
 
 // rotas de usuarios mongo db

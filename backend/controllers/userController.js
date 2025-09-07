@@ -1,5 +1,7 @@
 const User = require('../model/user');
 const pool = require('../config/db'); // importa o pool
+const puppeteer = require('puppeteer');
+
 
 
 //
@@ -32,6 +34,50 @@ exports.getStudentById = async (req, res) => {
     res.json(result.rows[0]);
   } catch (error) {
     console.error('Erro no backend:', error);
+    res.status(500).json({ error: 'Erro interno no servidor' });
+  }
+};
+
+exports.generateStudentCardPDF = async (req, res) => {
+  try {
+    const { htmlContent, matricula } = req.body;
+
+    if (!htmlContent) {
+      return res.status(400).json({ error: 'Conteúdo HTML é obrigatório' });
+    }
+
+    // Configura o Puppeteer
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-setuid-sandbox']
+    });
+
+    const page = await browser.newPage();
+    await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+
+    // Gera o PDF
+    const pdfBuffer = await page.pdf({
+      format: 'A4',
+      printBackground: true,
+      margin: {
+        top: '20px',
+        right: '20px',
+        bottom: '20px',
+        left: '20px'
+      }
+    });
+
+    await browser.close();
+
+    // Define os headers para download
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="card_aluno_${matricula || 'unknown'}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+
+    res.send(pdfBuffer);
+
+  } catch (error) {
+    console.error('Erro ao gerar PDF do card:', error);
     res.status(500).json({ error: 'Erro interno no servidor' });
   }
 };
@@ -101,6 +147,17 @@ exports.updateStudentById = async (req, res) => {
   }
 
 };
+
+
+
+exports.generatePDFsForStudents = async (req, res) => {
+  try {
+    console.log("entrou na funcao")
+  } catch (error) {
+    console.error('Erro ao gerar PDFs:', error);
+  }
+  
+}
 
 
 

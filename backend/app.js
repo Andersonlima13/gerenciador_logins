@@ -180,6 +180,9 @@ const validateSheet = (data) => {
 
 
 
+
+
+
 app.post('/upload', upload.single('file'), verifyTI, async (req, res) => {
   try {
     console.log('Caminho do arquivo recebido:', req.file.path);

@@ -7,6 +7,7 @@ import { Student, CreateStudentDto } from '../../types/student'
 
 
 
+
 /// O studentService é responsável por como obter os dados da api
 // faz um fetch , espera uma promessa dos dados do back-end, esses dados vem da interface  <Student[]>
 export const fetchStudents = async (): Promise<Student[]> => {
@@ -36,6 +37,10 @@ export const fetchStudentByMatricula = async (matricula: string): Promise<Studen
     ...aluno
   };
 };
+
+
+
+
 
 
 
@@ -69,6 +74,13 @@ export const handleDownloadStudents = async () => {
   }
 };
 
+
+
+
+
+
+
+// essa funcao deve passar para outro arquivo no codigo, aqui devem ficar so export consts
 // Função auxiliar para converter JSON para CSV
 function convertJsonToCsv(data: any[]): string {
   if (data.length === 0) return '';
@@ -174,6 +186,23 @@ export const updateStudent = async (id: string, data: Partial<Student>) => {
   const response = await apiClient.patch(`/students/${id}`, data)
   return response.data
 }
+
+// Função para solicitar geração de PDF do card do aluno
+export const requestStudentCardPDF = async (matricula: string): Promise<void> => {
+  try {
+    // Busca os dados completos do aluno
+    const studentData = await fetchStudentByMatricula(matricula);
+    
+    // Importa dinamicamente o serviço de PDF
+    const { generateAndDownloadStudentCardPDF } = await import('./generatePdf');
+    
+    // Solicita a geração e download do PDF
+    await generateAndDownloadStudentCardPDF(studentData);
+  } catch (error) {
+    console.error('Erro ao gerar PDF do card do aluno:', error);
+    throw new Error('Falha ao gerar PDF do card do aluno');
+  }
+};
 
 
 

@@ -1,7 +1,7 @@
 // src/app/alunos/[matricula]/page.tsx
 'use client'
 
-import { fetchStudentByMatricula } from '@/app/lib/api/services/studentService';
+import { fetchStudentByMatricula, requestStudentCardPDF } from '@/app/lib/api/services/studentService';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Student } from '@/app/lib/types/student';
@@ -212,6 +212,7 @@ export default function AlunoDetalhes({ params }: { params: { matricula: string 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isDownloadingPDF, setIsDownloadingPDF] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -247,6 +248,21 @@ export default function AlunoDetalhes({ params }: { params: { matricula: string 
 
     return () => controller.abort();
   }, [params.matricula]);
+
+  const handleDownloadPDF = async () => {
+    if (!aluno) return;
+    
+    setIsDownloadingPDF(true);
+    try {
+      // Solicita a geração do PDF através do studentService
+      await requestStudentCardPDF(aluno.matricula);
+    } catch (error) {
+      console.error('Erro ao baixar PDF:', error);
+      alert('Erro ao baixar PDF do card');
+    } finally {
+      setIsDownloadingPDF(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -386,7 +402,9 @@ export default function AlunoDetalhes({ params }: { params: { matricula: string 
                   <ActionButton onClick={() => router.push('/home')}>
                     Voltar
                   </ActionButton>
-                  <ActionButton><FiDownload /> Download Card</ActionButton>
+                  <ActionButton onClick={handleDownloadPDF} disabled={isDownloadingPDF}>
+                    <FiDownload /> {isDownloadingPDF ? 'Gerando PDF...' : 'Download Card'}
+                  </ActionButton>
                   <ActionButton><FiEdit /> Editar Card</ActionButton>
                   <ActionButton><FiTrash2 /> Excluir Card</ActionButton>
                 </ActionsMenu>

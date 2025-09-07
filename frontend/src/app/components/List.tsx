@@ -1,4 +1,3 @@
-
 // Component de Listagem, deve ser reaproveitado para listar alunos ou usuarios (TI,COORDENACAO,DIRECAO)
 'use client'
 
@@ -7,13 +6,13 @@ import styled from 'styled-components'
 import { FiChevronLeft, FiSend } from 'react-icons/fi'
 import { FiChevronRight } from 'react-icons/fi'
 import { FiSearch, FiPlus , FiDownload, FiUpload , FiCreditCard} from 'react-icons/fi'
-import { handleDownloadStudents,fetchStudents,uploadStudentSpreadsheet,downloadSpreadsheetTemplate } from '../lib/api/services/studentService'
+import { handleDownloadStudents,fetchStudents,uploadStudentSpreadsheet,downloadSpreadsheetTemplate,requestStudentCardPDF } from '../lib/api/services/studentService'
 import Link from 'next/link'
 import Modal from './Modal'
 import { Student } from '../lib/types/student'
-import ModalContent from './ModalContent'
 import AddStudentModalContent from "./AddStudentModalContent"
 import ExportStudentsModalContent from "./ExportStudentsModalContent"
+import LoadingOverlay from './LoadingOverlay'
 
 
 // Tipagem genérica
@@ -239,6 +238,7 @@ export function List<T extends { id: number | string }>({
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [uploadSuccess, setUploadSuccess] = useState(false)
   const [students, setStudents] = useState<Student[]>([])
+  const [isDownloadingPDF, setIsDownloadingPDF] = useState(false)
 
   useEffect(() => {
     setFilteredData(data)
@@ -260,6 +260,8 @@ export function List<T extends { id: number | string }>({
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
   const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem)
   const totalPages = Math.ceil(filteredData.length / itemsPerPage)
+
+
 
   const handleDownloadClick = async () => {
     setIsDownloading(true)
@@ -296,7 +298,7 @@ export function List<T extends { id: number | string }>({
       setUploadSuccess(true)
       const updatedStudents = await fetchStudents()
       setStudents(updatedStudents)
-      setTimeout(() => setModalType(false), 2000)
+      setTimeout(() => setModalType(null), 2000)
     } catch (error: any) {
       setUploadError(error.message || 'Erro ao enviar planilha')
     } finally {
@@ -316,33 +318,50 @@ export function List<T extends { id: number | string }>({
     }
   }
 
-
-
-
-
-
-
-
-
-
+  const handleDownloadPDFCards = async () => {
+    setIsDownloadingPDF(true)
+    try {
+      // Para cada aluno na lista atual, solicita a geração do PDF
+      for (const student of data as unknown as Student[]) {
+        try {
+          // Solicita a geração do PDF através do studentService
+          await requestStudentCardPDF(String(student.matricula))
+          // Pequeno delay entre downloads para evitar sobrecarga
+          await new Promise(resolve => setTimeout(resolve, 500))
+        } catch (studentError) {
+          console.error(`Erro ao processar aluno ${student.matricula}:`, studentError)
+          // Continua com o próximo aluno mesmo se um falhar
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao baixar cards em PDF:', error)
+      alert('Erro ao baixar cards em PDF')
+    } finally {
+      setIsDownloadingPDF(false)
+    }
+  }
 
   return (
     <TableWrapper>
+      {/* Feedback visual de carregamento PDF */}
+      {isDownloadingPDF && (
+        <LoadingOverlay message="Gerando cards em PDF..." subMessage="Por favor, aguarde enquanto os arquivos são processados." />
+      )}
     <TableHeader>         
-      <DataContainer>
+      <DataContainer onClick={handleDownloadPDFCards}>
         <FiCreditCard size={24} style={{ marginRight: '10px' }} />
-        Importar Cards
+        {isDownloadingPDF ? 'Gerando PDFs...' : 'Importar Cards em pdf'}
       </DataContainer>
 
       <DataContainer onClick={handleDownloadClick}>
         <FiDownload size={24} style={{ marginRight: '10px' }} />
         {isDownloading ? 'Gerando arquivo...' : 'Importar planilha'}
       </DataContainer>
-
+ 
       <DataContainer onClick={() => setModalType("adicionarAluno")}>
-  <FiPlus size={24} style={{ marginRight: '10px' }} />
-  Adicionar Aluno
-</DataContainer>
+        <FiPlus size={24} style={{ marginRight: '10px' }} />
+       Adicionar Aluno
+      </DataContainer>
 
    <DataContainer onClick={() => setModalType("exportarAlunos")}>
   <FiUpload size={24} style={{ marginRight: '10px' }} />
@@ -513,4 +532,5 @@ export function List<T extends { id: number | string }>({
   </PaginationContainer>
 )}
     </TableWrapper>
-  )}
+  );
+}
