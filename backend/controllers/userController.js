@@ -19,6 +19,14 @@ exports.getAllStudents = async (req, res) => {
 
 }
 
+
+
+
+
+
+
+
+
 exports.getStudentById = async (req, res) => {
   try {
     const { matricula } = req.params;

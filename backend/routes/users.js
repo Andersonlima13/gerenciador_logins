@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const userController = require('../controllers/userController');
-const adminController = require('../controllers/adminController');
+const adminController = require('../controllers/admWaiting for pgAdmin 4 to start...inController');
 const authenticateToken = require('../middlewares/authenticateToken');
 
 // ---- Alunos (Postgres) ----
