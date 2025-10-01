@@ -7,7 +7,7 @@ import axios, {
 } from 'axios';
 
 // definimos de onde vem o back end
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3050';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 const apiClient: AxiosInstance = axios.create({
   baseURL: API_URL,
